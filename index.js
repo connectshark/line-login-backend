@@ -18,7 +18,7 @@ app.use(function(req, res, next) {
 })
 
 app.get('/', (req, res) => { res.send('Hello World') })
-app.get('/login', line_controller.line)
+app.get('/auth', line_controller.line)
 
 const port = process.env.PORT || 3000
 app.listen(port)
