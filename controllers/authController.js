@@ -81,8 +81,8 @@ const line = async (req, res) => {
       client_secret: process.env.LINE_CLIENT_SECRET
     })
   })
-  const { id_token } = await fetch_token.json()
-  console.log(id_token)
+  const token_response = await fetch_token.json()
+  console.log(token_response)
 
   const fetch_verify = await fetch(`https://api.line.me/oauth2/v2.1/verify`, {
     method: 'POST',
@@ -90,7 +90,7 @@ const line = async (req, res) => {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
     body: new URLSearchParams({
-      id_token,
+      id_token: token_response.id_token,
       client_id: process.env.LINE_CLIENT_ID
     })
   })
