@@ -93,7 +93,7 @@ const line = async (req, res) => {
   })
   const { sub: userId, name, email } = await fetch_verify.json()
 
-  let user = await User.findOne({ line_id: userId })
+  let user = await User.findOne({ line_id: userId }).exec()
   if (!user) {
     user = await User.create({
       line_id: userId,
