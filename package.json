@@ -19,8 +19,6 @@
     "express-async-error": "^0.0.2",
     "express-rate-limit": "^6.6.0",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.6.1",
-    "mongoose-sequence": "^5.3.1",
     "node-fetch": "^2.6.1",
     "uuid": "^9.0.0"
   },
