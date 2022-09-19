@@ -4,16 +4,27 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "serve": "nodemon index.js"
+    "start": "node server",
+    "dev": "nodemon server"
   },
   "author": "chambers",
   "license": "MIT",
   "dependencies": {
-    "crypto-js": "^4.1.1",
+    "bcrypt": "^5.0.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "date-fns": "^2.29.3",
     "dotenv": "^10.0.0",
-    "express": "^4.17.1",
+    "express": "^4.18.1",
+    "express-async-error": "^0.0.2",
+    "express-rate-limit": "^6.6.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.6.1",
+    "mongoose-sequence": "^5.3.1",
     "node-fetch": "^2.6.1",
-    "nodemon": "^2.0.15"
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
   }
 }
