@@ -16,11 +16,11 @@ const userSchema = new mongoose.Schema({
   created_at: {
     type: Date,
     immutable: true,
-    default: () => Date.now
+    default: () => Date.now()
   },
   update_at: {
     type: Date,
-    default: () => Date.now
+    default: () => Date.now()
   },
   active: {
     type: Boolean,

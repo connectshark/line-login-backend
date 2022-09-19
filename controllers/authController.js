@@ -61,29 +61,27 @@ const login = async (req, res) => {
  */
 const line = async (req, res) => {
   const { code, state } = req.query
-  
+
   if (!code) {
     return res.redirect(`http://localhost:8080/callback?error=true&message=未正確認證`)
   }
-
-  const form = new URLSearchParams({
-    grant_type: 'authorization_code',
-    code: code,
-    redirect_uri: process.env.LINE_REDIRECT_URI,
-    client_id: process.env.LINE_CLIENT_ID,
-    client_secret: process.env.LINE_CLIENT_SECRET
-  })
 
   const fetch_token = await fetch('https://api.line.me/oauth2/v2.1/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
-    body: form
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: process.env.LINE_REDIRECT_URI,
+      client_id: process.env.LINE_CLIENT_ID,
+      client_secret: process.env.LINE_CLIENT_SECRET
+    })
   })
   const { id_token } = await fetch_token.json()
 
-  const fetch_profile = await fetch(`https://api.line.me/oauth2/v2.1/verify`, {
+  const fetch_verify = await fetch(`https://api.line.me/oauth2/v2.1/verify`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
@@ -93,9 +91,31 @@ const line = async (req, res) => {
       client_id: process.env.LINE_CLIENT_ID
     })
   })
-  const profile = await fetch_profile.json()
-  console.log('profile:', profile)
-  res.redirect(`http://localhost:8080/callback?success=true`)
+  const { sub: userId, name, email } = await fetch_verify.json()
+
+  let user = await User.findOne({ line_id: userId })
+  if (!user) {
+    user = await User.create({
+      line_id: userId,
+      email,
+      username: name
+    })
+  }
+
+  const accessToken = jwt.sign(
+    {
+      UserInfo: {
+        username: name,
+        email,
+        id: user._id
+      }
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: '2m' }
+  )
+
+  const URI = process.env.REDIRECT_URI
+  res.redirect(URI + `?access_token=${accessToken}&success=true`)
 }
 
 /**
