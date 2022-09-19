@@ -9,6 +9,57 @@ const fetch = require('node-fetch')
  * @access Public
  */
 const login = async (req, res) => {
+  const { username, password } = req.body
+
+  if (!username || !password) {
+    return res.status(400).json({ message: 'All fields are required' })
+  }
+
+  const foundUser = await User.findOne({ username }).exec()
+
+  if (!foundUser || !foundUser.active) {
+    return res.status(401).json({ message: 'Unauthorized' })
+  }
+
+  const match = await bcrypt.compare(password, foundUser.password)
+
+  if (!match) {
+    return res.status(401).json({ message: 'Unauthorized' })
+  }
+
+  const accessToken = jwt.sign(
+    {
+      UserInfo: {
+        username: foundUser.username,
+        roles: foundUser.roles
+      }
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: '15m' }
+  )
+
+  const refreshToken = jwt.sign(
+    { username: foundUser.username },
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: '7d' }
+  )
+
+  res.cookie('jwt', refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  })
+
+  res.json({ accessToken })
+}
+
+/**
+ * @desc Login
+ * @route POST /auth
+ * @access Public
+ */
+const line = async (req, res) => {
   const { code, state } = req.body
 
   if (!code) {
@@ -30,45 +81,21 @@ const login = async (req, res) => {
     },
     body: form
   })
-  const { access_token } = await fetch_token.json()
+  const { id_token } = await fetch_token.json()
 
-  const fetch_profile = await fetch(`https://api.line.me/v2/profile?access_token=${access_token}`)
-  const profile = await fetch_profile.json()
-
-  let foundUser = await User.findOne({ line_id: profile.userId }).exec()
-
-  if (!foundUser) {
-    foundUser = await User.create({
-      username: profile.displayName,
-      line_id: profile.userId
-    })
-  }
-
-
-  const accessToken = jwt.sign(
-    {
-      UserInfo: {
-        username: foundUser.username,
-      }
+  const fetch_profile = await fetch(`https://api.line.me/oauth2/v2.1/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
     },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: '15m' }
-  )
-
-  const refreshToken = jwt.sign(
-    { username: foundUser.username },
-    process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: '7d' }
-  )
-
-  res.cookie('jwt', refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    body: new URLSearchParams({
+      id_token,
+      client_id: process.env.LINE_CLIENT_ID
+    })
   })
-
-  res.json({ accessToken })
+  const profile = await fetch_profile.json()
+  console.log('profile:', profile)
+  res.redirect(`http://localhost:8080/callback?success=true`)
 }
 
 /**
@@ -139,5 +166,6 @@ const logout = async (req, res) => {
 module.exports = {
   login,
   refresh,
-  logout
+  logout,
+  line
 }
