@@ -60,8 +60,8 @@ const login = async (req, res) => {
  * @access Public
  */
 const line = async (req, res) => {
-  const { code, state } = req.body
-
+  const { code, state } = req.query
+  
   if (!code) {
     return res.redirect(`http://localhost:8080/callback?error=true&message=未正確認證`)
   }
