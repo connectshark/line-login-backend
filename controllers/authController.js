@@ -61,9 +61,11 @@ const login = async (req, res) => {
  */
 const line = async (req, res) => {
   const { code, state } = req.query
+  const URI = process.env.REDIRECT_URI
+  console.log(code, state)
 
   if (!code) {
-    return res.redirect(`http://localhost:8080/callback?error=true&message=未正確認證`)
+    return res.redirect(URI + `?error=true&message=未正確認證`)
   }
 
   const fetch_token = await fetch('https://api.line.me/oauth2/v2.1/token', {
@@ -80,6 +82,7 @@ const line = async (req, res) => {
     })
   })
   const { id_token } = await fetch_token.json()
+  console.log(id_token)
 
   const fetch_verify = await fetch(`https://api.line.me/oauth2/v2.1/verify`, {
     method: 'POST',
@@ -113,8 +116,6 @@ const line = async (req, res) => {
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: '2m' }
   )
-
-  const URI = process.env.REDIRECT_URI
   res.redirect(URI + `?access_token=${accessToken}&success=true`)
 }
 
